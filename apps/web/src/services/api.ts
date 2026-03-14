@@ -184,4 +184,53 @@ export const musicApi = {
     }),
 }
 
-export default { projectApi, authApi, scriptApi, castApi, musicApi }
+// 分镜 API
+export const storyboardApi = {
+  // 获取分镜列表
+  getStoryboards: () => fetchApi<any[]>('/storyboard'),
+
+  // 获取分镜详情
+  getStoryboard: (id: string) => fetchApi<any>(`/storyboard/${id}`),
+
+  // 创建分镜
+  createStoryboard: (data: { title: string; projectId: string; frames?: any[] }) =>
+    fetchApi<any>('/storyboard', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // 更新分镜
+  updateStoryboard: (id: string, data: Partial<{ title: string; frames: any[] }>) =>
+    fetchApi<any>(`/storyboard/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  // 删除分镜
+  deleteStoryboard: (id: string) =>
+    fetchApi<any>(`/storyboard/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // 添加镜头
+  addFrame: (storyboardId: string, data: any) =>
+    fetchApi<any>(`/storyboard/${storyboardId}/frames`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // 删除镜头
+  deleteFrame: (storyboardId: string, frameId: string) =>
+    fetchApi<any>(`/storyboard/${storyboardId}/frames/${frameId}`, {
+      method: 'DELETE',
+    }),
+
+  // 更新镜头
+  updateFrame: (storyboardId: string, frameId: string, data: any) =>
+    fetchApi<any>(`/storyboard/${storyboardId}/frames/${frameId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+}
+
+export default { projectApi, authApi, scriptApi, castApi, musicApi, storyboardApi }
