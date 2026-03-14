@@ -90,4 +90,40 @@ export const authApi = {
   getMe: () => fetchApi<any>('/auth/me'),
 }
 
-export default { projectApi, authApi }
+// 剧本 API
+export const scriptApi = {
+  // 获取剧本列表
+  getScripts: () => fetchApi<any[]>('/scripts'),
+  
+  // 获取剧本详情
+  getScript: (id: string) => fetchApi<any>(`/scripts/${id}`),
+  
+  // 创建剧本
+  createScript: (data: { title: string; content?: string; genre?: string; projectId?: string }) =>
+    fetchApi<any>('/scripts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  
+  // 更新剧本
+  updateScript: (id: string, data: Partial<{ title: string; content: string; genre: string; status: string }>) =>
+    fetchApi<any>(`/scripts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  
+  // 删除剧本
+  deleteScript: (id: string) =>
+    fetchApi<any>(`/scripts/${id}`, {
+      method: 'DELETE',
+    }),
+  
+  // AI 生成剧本
+  generateScript: (data: { prompt: string; genre?: string; projectId?: string }) =>
+    fetchApi<{ title: string; content: string }>('/scripts/generate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+}
+
+export default { projectApi, authApi, scriptApi }
