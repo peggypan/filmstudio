@@ -155,4 +155,33 @@ export const castApi = {
     }),
 }
 
-export default { projectApi, authApi, scriptApi, castApi }
+// 配乐 API
+export const musicApi = {
+  // 获取音乐列表
+  getMusic: () => fetchApi<any[]>('/music'),
+
+  // 获取音乐详情
+  getMusicById: (id: string) => fetchApi<any>(`/music/${id}`),
+
+  // 创建音乐记录
+  createMusic: (data: { title: string; artist?: string; style?: string; duration?: number; license?: string; tags?: string[]; projectId?: string }) =>
+    fetchApi<any>('/music', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // 更新音乐
+  updateMusic: (id: string, data: Partial<{ title: string; artist: string; style: string; duration: number; license: string; tags: string[] }>) =>
+    fetchApi<any>(`/music/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  // 删除音乐
+  deleteMusic: (id: string) =>
+    fetchApi<any>(`/music/${id}`, {
+      method: 'DELETE',
+    }),
+}
+
+export default { projectApi, authApi, scriptApi, castApi, musicApi }
