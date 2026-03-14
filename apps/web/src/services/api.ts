@@ -233,4 +233,42 @@ export const storyboardApi = {
     }),
 }
 
-export default { projectApi, authApi, scriptApi, castApi, musicApi, storyboardApi }
+// 配音 API
+export const dubbingApi = {
+  // 获取配音列表
+  getDubbings: () => fetchApi<any[]>('/dubbing'),
+
+  // 获取配音详情
+  getDubbing: (id: string) => fetchApi<any>(`/dubbing/${id}`),
+
+  // 创建配音
+  createDubbing: (data: { title: string; text: string; voiceId: string; projectId?: string; castId?: string }) =>
+    fetchApi<any>('/dubbing', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // 更新配音
+  updateDubbing: (id: string, data: Partial<{ title: string; text: string; voiceId: string }>) =>
+    fetchApi<any>(`/dubbing/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  // 删除配音
+  deleteDubbing: (id: string) =>
+    fetchApi<any>(`/dubbing/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // 生成配音（调用 ElevenLabs）
+  generateDubbing: (id: string) =>
+    fetchApi<any>(`/dubbing/${id}/generate`, {
+      method: 'POST',
+    }),
+
+  // 获取可用音色列表
+  getVoices: () => fetchApi<any[]>('/dubbing/voices'),
+}
+
+export default { projectApi, authApi, scriptApi, castApi, musicApi, storyboardApi, dubbingApi }
