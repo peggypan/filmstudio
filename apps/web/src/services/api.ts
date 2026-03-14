@@ -126,4 +126,33 @@ export const scriptApi = {
     }),
 }
 
-export default { projectApi, authApi, scriptApi }
+// 演员 API
+export const castApi = {
+  // 获取演员列表
+  getCasts: () => fetchApi<any[]>('/cast'),
+  
+  // 获取演员详情
+  getCast: (id: string) => fetchApi<any>(`/cast/${id}`),
+  
+  // 创建演员
+  createCast: (data: { name: string; type: string; bio?: string; contact?: string; email?: string; phone?: string; skills?: string[] }) =>
+    fetchApi<any>('/cast', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  
+  // 更新演员
+  updateCast: (id: string, data: Partial<{ name: string; type: string; bio: string; contact: string; email: string; phone: string; skills: string[] }>) =>
+    fetchApi<any>(`/cast/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  
+  // 删除演员
+  deleteCast: (id: string) =>
+    fetchApi<any>(`/cast/${id}`, {
+      method: 'DELETE',
+    }),
+}
+
+export default { projectApi, authApi, scriptApi, castApi }
