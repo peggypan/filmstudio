@@ -11,6 +11,7 @@ import { StoryboardModule } from './modules/storyboard/storyboard.module';
 import { DubbingModule } from './modules/dubbing/dubbing.module';
 import { ProjectModule } from './modules/project/project.module';
 import { FileModule } from './modules/file/file.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -29,5 +30,6 @@ import { FileModule } from './modules/file/file.module';
     ProjectModule,
     FileModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

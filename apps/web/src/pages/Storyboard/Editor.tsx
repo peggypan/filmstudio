@@ -30,7 +30,7 @@ import {
   CopyOutlined,
   FolderOpenOutlined,
 } from '@ant-design/icons'
-import { storyboardApi, projectApi } from '../../services/api'
+import { storyboardApi, projectApi, fileApi } from '../../services/api'
 import type { Storyboard, StoryboardFrame } from '../../types/storyboard'
 
 const { Title, Text } = Typography
@@ -69,6 +69,11 @@ function StoryboardEditor() {
   const [form] = Form.useForm()
   const [frameForm] = Form.useForm()
   const canvasRef = useRef<HTMLDivElement>(null)
+  
+  // 分镜图上传状态
+  const [frameImageUrl, setFrameImageUrl] = useState<string>('')
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   // 加载数据
   useEffect(() => {
@@ -132,11 +137,12 @@ function StoryboardEditor() {
     try {
       const newFrame = {
         ...values,
+        imageUrl: frameImageUrl,
         order: currentStoryboard.frames?.length || 0,
       }
       await storyboardApi.addFrame(currentStoryboard.id, newFrame)
       message.success('镜头添加成功')
-      setFrameModalVisible(false)
+      closeFrameModal()
       frameForm.resetFields()
       refreshCurrentStoryboard()
     } catch (error: any) {
@@ -149,9 +155,12 @@ function StoryboardEditor() {
     if (!currentStoryboard || !editingFrame) return
 
     try {
-      await storyboardApi.updateFrame(currentStoryboard.id, editingFrame.id, values)
+      await storyboardApi.updateFrame(currentStoryboard.id, editingFrame.id, {
+        ...values,
+        imageUrl: frameImageUrl,
+      })
       message.success('镜头更新成功')
-      setFrameModalVisible(false)
+      closeFrameModal()
       setEditingFrame(null)
       frameForm.resetFields()
       refreshCurrentStoryboard()
@@ -215,6 +224,7 @@ function StoryboardEditor() {
   const openFrameModal = (frame?: StoryboardFrame) => {
     if (frame) {
       setEditingFrame(frame)
+      setFrameImageUrl(frame.imageUrl || '')
       frameForm.setFieldsValue({
         description: frame.description,
         shotType: frame.shotType,
@@ -224,10 +234,20 @@ function StoryboardEditor() {
       })
     } else {
       setEditingFrame(null)
+      setFrameImageUrl('')
       frameForm.resetFields()
       frameForm.setFieldsValue({ duration: 3, shotType: 'medium', cameraMovement: 'static' })
     }
+    setUploadProgress(0)
     setFrameModalVisible(true)
+  }
+
+  // 关闭弹窗时重置图片状态
+  const closeFrameModal = () => {
+    setFrameModalVisible(false)
+    setFrameImageUrl('')
+    setUploadingImage(false)
+    setUploadProgress(0)
   }
 
   // 拖拽开始
@@ -495,7 +515,7 @@ function StoryboardEditor() {
       <Modal
         title={editingFrame ? '编辑镜头' : '添加镜头'}
         open={frameModalVisible}
-        onCancel={() => setFrameModalVisible(false)}
+        onCancel={closeFrameModal}
         onOk={() => frameForm.submit()}
         width={600}
       >
@@ -551,17 +571,56 @@ function StoryboardEditor() {
           <Divider />
 
           <Form.Item label="分镜图">
-            <Upload.Dragger
-              accept="image/*"
-              showUploadList={false}
-              customRequest={({ onSuccess }) => setTimeout(() => onSuccess?.('ok'), 500)}
-            >
-              <p className="ant-upload-drag-icon">
-                <PictureOutlined />
-              </p>
-              <p className="ant-upload-text">点击或拖拽上传分镜图</p>
-              <p className="ant-upload-hint">支持 AI 生成分镜图</p>
-            </Upload.Dragger>
+            {frameImageUrl ? (
+              <div style={{ marginBottom: 16 }}>
+                <img 
+                  src={frameImageUrl} 
+                  alt="分镜图" 
+                  style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 4 }} 
+                />
+                <div style={{ marginTop: 8 }}>
+                  <Button 
+                    size="small" 
+                    danger 
+                    onClick={() => setFrameImageUrl('')}
+                  >
+                    删除图片
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Upload.Dragger
+                accept="image/*"
+                showUploadList={false}
+                beforeUpload={async (file) => {
+                  setUploadingImage(true)
+                  setUploadProgress(0)
+                  try {
+                    const result = await fileApi.uploadStoryboard(file, (progress) => {
+                      setUploadProgress(progress)
+                    })
+                    if (result.success) {
+                      setFrameImageUrl(result.data.url)
+                      message.success('图片上传成功')
+                    }
+                  } catch (error: any) {
+                    message.error('上传失败: ' + error.message)
+                  } finally {
+                    setUploadingImage(false)
+                    setUploadProgress(0)
+                  }
+                  return false
+                }}
+              >
+                <p className="ant-upload-drag-icon">
+                  <PictureOutlined />
+                </p>
+                <p className="ant-upload-text">
+                  {uploadingImage ? `上传中 ${uploadProgress}%` : '点击或拖拽上传分镜图'}
+                </p>
+                <p className="ant-upload-hint">支持 JPG、PNG、WebP 格式，最大 50MB</p>
+              </Upload.Dragger>
+            )}
           </Form.Item>
         </Form>
       </Modal>
