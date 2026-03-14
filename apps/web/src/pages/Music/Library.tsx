@@ -23,8 +23,7 @@ import {
   UploadOutlined,
   CustomerServiceOutlined
 } from '@ant-design/icons'
-import { musicApi } from '../../services/api'
-import { projectApi } from '../../services/api'
+import { musicApi, projectApi, fileApi } from '../../services/api'
 import type { Music } from '../../types/music'
 
 const { Option } = Select
@@ -166,19 +165,34 @@ function MusicLibrary() {
     }
   }
 
-  // 模拟上传（实际应调用后端上传接口）
-  const handleUpload = (info: any) => {
-    if (info.file.status === 'uploading') {
-      setUploading(true)
-      setUploadProgress(info.file.percent || 0)
-    } else if (info.file.status === 'done') {
+  // 处理音乐文件上传
+  const handleMusicUpload = async (file: File) => {
+    setUploading(true)
+    setUploadProgress(0)
+
+    try {
+      const result = await fileApi.uploadMusic(file, (progress) => {
+        setUploadProgress(progress)
+      })
+
+      if (result.success) {
+        // 自动创建音乐记录
+        await musicApi.createMusic({
+          title: file.name.replace(/\.[^/.]+$/, ''), // 去掉扩展名
+          url: result.data.url,
+          duration: 0, // 需要前端解析音频时长
+        })
+        message.success('音乐上传成功')
+        loadMusic()
+      }
+    } catch (error: any) {
+      message.error('上传失败: ' + error.message)
+    } finally {
       setUploading(false)
-      message.success(`${info.file.name} 上传成功`)
-      loadMusic()
-    } else if (info.file.status === 'error') {
-      setUploading(false)
-      message.error(`${info.file.name} 上传失败`)
+      setUploadProgress(0)
     }
+
+    return false // 阻止默认上传行为
   }
 
   const columns = [
@@ -298,11 +312,7 @@ function MusicLibrary() {
           <Upload
             accept="audio/*"
             showUploadList={false}
-            customRequest={({ onSuccess }) => {
-              // 模拟上传，实际应调用后端
-              setTimeout(() => onSuccess?.('ok'), 1000)
-            }}
-            onChange={handleUpload}
+            beforeUpload={handleMusicUpload}
           >
             <Button icon={<UploadOutlined />} loading={uploading}>
               上传音乐

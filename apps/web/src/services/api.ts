@@ -164,7 +164,7 @@ export const musicApi = {
   getMusicById: (id: string) => fetchApi<any>(`/music/${id}`),
 
   // 创建音乐记录
-  createMusic: (data: { title: string; artist?: string; style?: string; duration?: number; license?: string; tags?: string[]; projectId?: string }) =>
+  createMusic: (data: { title: string; artist?: string; style?: string; duration?: number; license?: string; tags?: string[]; url?: string; projectId?: string }) =>
     fetchApi<any>('/music', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -271,4 +271,62 @@ export const dubbingApi = {
   getVoices: () => fetchApi<any[]>('/dubbing/voices'),
 }
 
-export default { projectApi, authApi, scriptApi, castApi, musicApi, storyboardApi, dubbingApi }
+// 文件上传 API
+export const fileApi = {
+  // 通用文件上传
+  uploadFile: (file: File, type: 'avatar' | 'music' | 'storyboard' | 'script' | 'other' = 'other', onProgress?: (progress: number) => void) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return new Promise<any>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable && onProgress) {
+          const progress = Math.round((event.loaded / event.total) * 100)
+          onProgress(progress)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(JSON.parse(xhr.responseText))
+        } else {
+          reject(new Error('上传失败'))
+        }
+      })
+
+      xhr.addEventListener('error', () => reject(new Error('上传出错')))
+
+      xhr.open('POST', `${API_BASE_URL}/files/upload?type=${type}`)
+      const token = localStorage.getItem('accessToken')
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      }
+      xhr.send(formData)
+    })
+  },
+
+  // 上传头像
+  uploadAvatar: (file: File, onProgress?: (progress: number) => void) =>
+    fileApi.uploadFile(file, 'avatar', onProgress),
+
+  // 上传音乐
+  uploadMusic: (file: File, onProgress?: (progress: number) => void) =>
+    fileApi.uploadFile(file, 'music', onProgress),
+
+  // 上传分镜图
+  uploadStoryboard: (file: File, onProgress?: (progress: number) => void) =>
+    fileApi.uploadFile(file, 'storyboard', onProgress),
+
+  // 删除文件
+  deleteFile: (url: string) =>
+    fetchApi<any>(`/files${url}`, {
+      method: 'DELETE',
+    }),
+
+  // 获取文件统计
+  getStats: () => fetchApi<any>('/files/stats'),
+}
+
+export default { projectApi, authApi, scriptApi, castApi, musicApi, storyboardApi, dubbingApi, fileApi }

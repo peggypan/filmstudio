@@ -12,17 +12,22 @@ import {
   Popconfirm,
   Space,
   Tag,
-  Image
+  Image,
+  Upload,
+  Progress
 } from 'antd'
+import type { UploadFile } from 'antd/es/upload/interface'
 import { 
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined, 
   UserOutlined,
   PhoneOutlined,
-  MailOutlined
+  MailOutlined,
+  UploadOutlined,
+  LoadingOutlined
 } from '@ant-design/icons'
-import { castApi } from '../../services/api'
+import { castApi, fileApi } from '../../services/api'
 import type { Cast } from '../../types/cast'
 
 const { Option } = Select
@@ -34,6 +39,12 @@ function CastList() {
   const [modalVisible, setModalVisible] = useState(false)
   const [editingCast, setEditingCast] = useState<Cast | null>(null)
   const [form] = Form.useForm()
+  
+  // 头像上传状态
+  const [avatarUrl, setAvatarUrl] = useState<string>('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [fileList, setFileList] = useState<UploadFile[]>([])
 
   // 加载演员列表
   const loadCasts = async () => {
@@ -56,6 +67,7 @@ function CastList() {
   const openModal = (cast?: Cast) => {
     if (cast) {
       setEditingCast(cast)
+      setAvatarUrl(cast.avatar || '')
       form.setFieldsValue({
         name: cast.name,
         type: cast.type,
@@ -67,6 +79,8 @@ function CastList() {
       })
     } else {
       setEditingCast(null)
+      setAvatarUrl('')
+      setFileList([])
       form.resetFields()
     }
     setModalVisible(true)
@@ -76,6 +90,9 @@ function CastList() {
   const closeModal = () => {
     setModalVisible(false)
     setEditingCast(null)
+    setAvatarUrl('')
+    setFileList([])
+    setUploadProgress(0)
     form.resetFields()
   }
 
@@ -85,6 +102,7 @@ function CastList() {
       // 处理技能字符串转数组
       const data = {
         ...values,
+        avatar: avatarUrl,
         skills: values.skills ? values.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
       }
 
@@ -100,6 +118,30 @@ function CastList() {
     } catch (error: any) {
       message.error('保存失败: ' + error.message)
     }
+  }
+
+  // 处理头像上传
+  const handleAvatarUpload = async (file: File) => {
+    setUploading(true)
+    setUploadProgress(0)
+    
+    try {
+      const result = await fileApi.uploadAvatar(file, (progress) => {
+        setUploadProgress(progress)
+      })
+      
+      if (result.success) {
+        setAvatarUrl(result.data.url)
+        message.success('头像上传成功')
+      }
+    } catch (error: any) {
+      message.error('上传失败: ' + error.message)
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+    }
+    
+    return false // 阻止默认上传行为
   }
 
   // 删除演员
@@ -275,6 +317,38 @@ function CastList() {
           onFinish={handleSave}
           initialValues={{ type: 'actor' }}
         >
+          {/* 头像上传 */}
+          <Form.Item label="头像">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover' }}
+                  preview={false}
+                />
+              ) : (
+                <Avatar size={100} icon={<UserOutlined />} />
+              )}
+              <div style={{ flex: 1 }}>
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  beforeUpload={handleAvatarUpload}
+                  fileList={fileList}
+                  onChange={({ fileList }) => setFileList(fileList)}
+                >
+                  <Button icon={uploading ? <LoadingOutlined /> : <UploadOutlined />} disabled={uploading}>
+                    {uploading ? '上传中...' : '上传头像'}
+                  </Button>
+                </Upload>
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <Progress percent={uploadProgress} size="small" style={{ marginTop: 8 }} />
+                )}
+                <p style={{ fontSize: 12, color: '#888', marginTop: 8 }}>支持 JPG、PNG、WebP 格式，最大 50MB</p>
+              </div>
+            </div>
+          </Form.Item>
+
           <Form.Item
             label="姓名"
             name="name"

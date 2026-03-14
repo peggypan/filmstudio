@@ -29,6 +29,7 @@ export interface CreateMusicRequest {
   duration?: number
   license?: string
   tags?: string[]
+  url?: string
   projectId?: string
 }
 

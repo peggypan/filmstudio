@@ -19,6 +19,7 @@ export interface Cast {
 export interface CreateCastRequest {
   name: string
   type: string
+  avatar?: string
   bio?: string
   contact?: string
   email?: string
@@ -29,6 +30,7 @@ export interface CreateCastRequest {
 export interface UpdateCastRequest {
   name?: string
   type?: string
+  avatar?: string
   bio?: string
   contact?: string
   email?: string
