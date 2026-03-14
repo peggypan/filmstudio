@@ -1,4 +1,4 @@
-import { Layout, Menu, Button } from 'antd'
+import { Layout, Menu } from 'antd'
 import {
   HomeOutlined,
   FileTextOutlined,

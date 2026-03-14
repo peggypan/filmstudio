@@ -1,5 +1,5 @@
 import { Button, Card, Select, Input, Space } from 'antd'
-import { AudioOutlined, PlayCircleOutlined } from '@ant-design/icons'
+import { AudioOutlined } from '@ant-design/icons'
 
 const { TextArea } = Input
 
