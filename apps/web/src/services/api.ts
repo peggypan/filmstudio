@@ -1,8 +1,15 @@
 // API 基础配置
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001'
 
-// 获取 token
-const getToken = () => localStorage.getItem('token')
+// 从 localStorage 获取 token（zustand persist 存储的位置）
+const getToken = () => {
+  const authData = localStorage.getItem('filmstudio-auth')
+  if (authData) {
+    const parsed = JSON.parse(authData)
+    return parsed.state?.token || null
+  }
+  return null
+}
 
 // 通用请求函数
 async function fetchApi<T>(
