@@ -5,5 +5,6 @@ import { ScriptService } from './script.service';
 @Module({
   controllers: [ScriptController],
   providers: [ScriptService],
+  exports: [ScriptService],
 })
 export class ScriptModule {}

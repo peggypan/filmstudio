@@ -5,5 +5,6 @@ import { CastService } from './cast.service';
 @Module({
   controllers: [CastController],
   providers: [CastService],
+  exports: [CastService],
 })
 export class CastModule {}
